@@ -1,0 +1,4 @@
+---
+project_code: cloudcustodian
+region: "{{var.aws_region | default('ap-southeast-2')}}"
+source_repo_url: demo-cloud-custodian
