@@ -1,0 +1,105 @@
+---
+vars:
+  role: &role arn:aws:iam::{account_id}:role/demo-cloud-custodian
+  function-prefix: &prefix demo-cloud-custodian-
+
+policies:
+  # remove EC2 Security Group ingress rules that allows all traffic from all address
+  - name: ec2-securitygroup-ingress-all-traffic
+    resource: security-group
+    description: |
+      Remove any rule from a security group that allows 0.0.0.0/0 or ::/0 (IPv6) ingress
+      on all protocols.
+
+    mode:
+      type: cloudtrail
+      role: *role
+      function-prefix: *prefix
+      events:
+        - source: ec2.amazonaws.com
+          event: AuthorizeSecurityGroupIngress
+          ids: "responseElements.securityGroupRuleSet.items[].groupId"
+        - source: ec2.amazonaws.com
+          event: AuthorizeSecurityGroupEgress
+          ids: "responseElements.securityGroupRuleSet.items[].groupId"
+        - source: ec2.amazonaws.com
+          event: RevokeSecurityGroupEgress
+          ids: "requestParameters.groupId"
+        - source: ec2.amazonaws.com
+          event: RevokeSecurityGroupIngress
+          ids: "requestParameters.groupId"
+      execution-options:
+        metrics_enabled: "aws://?namespace=CloudCustodian"
+    filters:
+      - or:
+          - type: ingress
+            IpProtocol: "-1"
+            Cidr:
+              value: "0.0.0.0/0"
+          - type: ingress
+            IpProtocol: "-1"
+            CidrV6:
+              value: "::/0"
+    actions:
+      - type: post-finding
+        severity_normalized: 40
+        types:
+          - "Software and Configuration Checks/AWS Security Best Practices"
+        recommendation: "Remove ingress rules that allow unrestricted traffic from all IP addresses."
+        confidence: 100
+        compliance_status: FAILED
+      - type: remove-permissions
+        ingress: matched
+
+  # remove EC2 Security Group ingress rules that allows incoming connection to unapproved ports
+  - name: ec2-securitygroup-ingress-unapproved-ports
+    resource: security-group
+    description: |
+      Remove any rule from a security group that allows 0.0.0.0/0 or ::/0 (IPv6) ingress
+      on unallowed ports.
+
+    mode:
+      type: cloudtrail
+      role: *role
+      function-prefix: *prefix
+      events:
+        - source: ec2.amazonaws.com
+          event: AuthorizeSecurityGroupIngress
+          ids: "responseElements.securityGroupRuleSet.items[].groupId"
+        - source: ec2.amazonaws.com
+          event: AuthorizeSecurityGroupEgress
+          ids: "responseElements.securityGroupRuleSet.items[].groupId"
+        - source: ec2.amazonaws.com
+          event: RevokeSecurityGroupEgress
+          ids: "requestParameters.groupId"
+        - source: ec2.amazonaws.com
+          event: RevokeSecurityGroupIngress
+          ids: "requestParameters.groupId"
+      execution-options:
+        metrics_enabled: "aws://?namespace=CloudCustodian"
+    filters:
+      - or:
+          - type: ingress
+            IpProtocol: tcp
+            OnlyPorts:
+              - 80
+              - 443
+            Cidr:
+              value: "0.0.0.0/0"
+          - type: ingress
+            IpProtocol: tcp
+            OnlyPorts:
+              - 80
+              - 443
+            CidrV6:
+              value: "::/0"
+    actions:
+      - type: post-finding
+        severity_normalized: 40
+        types:
+          - "Software and Configuration Checks/AWS Security Best Practices"
+        recommendation: "Remove ingress rules that allow unrestricted traffic on ports other than 80 and 443."
+        confidence: 100
+        compliance_status: FAILED
+      - type: remove-permissions
+        ingress: matched

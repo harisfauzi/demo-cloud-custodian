@@ -1,0 +1,49 @@
+---
+template:
+  path: security_group.yaml.j2
+
+sceptre_user_data:
+  project_code: "{{stack_group_config.project_code}}"
+  source_repo_url: "{{stack_group_config.source_repo_url}}"
+  description: Demo security group updated by cloud-custodian.
+  security_groups:
+
+    - name: Demo01
+      group_description: This should have one inbound rule that allows all form all using IPv4
+      vpc_id: "{{my_vpc}}"
+      tags:
+        Name: Demo01
+        Project: "{{ stack_group_config.project_code }}"
+        StackName: "!Sub ${AWS::StackName}"
+      security_group_ingress:
+        - ip_protocol: -1
+          description: Allow all incoming from all
+          cidr_ip: 0.0.0.0/0
+
+    - name: Demo02
+      group_description: This should have three inbound rules that allows all from all using IPv4 on port 80,443,and 8080
+      vpc_id: "{{my_vpc}}"
+      tags:
+        Name: Demo02
+        Project: "{{ stack_group_config.project_code }}"
+        StackName: "!Sub ${AWS::StackName}"
+      security_group_ingress:
+        - ip_protocol: 6
+          description: Allow all incoming from all
+          cidr_ip: 0.0.0.0/0
+          from_port: 80
+          to_port: 80
+        - ip_protocol: 6
+          description: Allow all incoming from all
+          cidr_ip: 0.0.0.0/0
+          from_port: 443
+          to_port: 443
+        - ip_protocol: 6
+          description: Allow all incoming from all
+          cidr_ip: 0.0.0.0/0
+          from_port: 8080
+          to_port: 8080
+
+stack_tags:
+  Project: Demo Cloud Custodian
+  Description: Automatically remediate findings from AWS Config.

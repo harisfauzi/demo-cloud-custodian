@@ -1,0 +1,2 @@
+---
+my_vpc: "{{var.vpc_id | default('vpc-12345678')}}"

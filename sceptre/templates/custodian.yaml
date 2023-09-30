@@ -1,0 +1,53 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: Cloud Custodian Common components
+Resources:
+  CustodianLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: c7n/demo-cloud-custodian
+      RetentionInDays: 14
+
+  CustodianRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: demo-cloud-custodian
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns: ["arn:aws:iam::aws:policy/PowerUserAccess"]
+      Policies:
+        - PolicyName: iam
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - iam:ListAccountAliases
+                  - iam:GetRole
+                  - iam:ListAttachedRolePolicies
+                  - iam:ListInstanceProfiles
+                  - iam:AttachRolePolicy
+                  - iam:ListUsers
+                  - iam:GetUser
+                  - iam:GetCredentialReport
+                  - iam:GenerateCredentialReport
+                  - iam:ListMFADevices
+                  - iam:TagUser
+                Resource: "*"
+
+Outputs:
+  CustodianLogGroup:
+    Description: Cloud Custodians Log Group
+    Value: !Ref CustodianLogGroup
+    Export:
+      Name: cloud-custodian-loggroup
+
+  CustodianRole:
+    Description: Cloud Custodians Role
+    Value: !Ref CustodianRole
+    Export:
+      Name: cloud-custodian-role

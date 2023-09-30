@@ -1,0 +1,7 @@
+---
+template:
+  path: custodian.yaml
+
+stack_tags:
+  Project: Demo Cloud Custodian
+  Description: Automatically remediate findings from AWS Config.
